@@ -1,0 +1,12 @@
+{
+  "name": "custom-eventemitter",
+  "version": "1.0.0",
+  "description": "custom eventemitter",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "author": "S.S.Magizhnun",
+  "license": "ISC"
+}
