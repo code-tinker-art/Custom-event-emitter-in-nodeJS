@@ -1,64 +1,86 @@
-import { EventEmitter } from "./main.js";
+﻿import { EventEmitter } from './main.js';
 
-const e = new EventEmitter();
+const emitter = new EventEmitter();
 
-console.log("--- 1. Testing Max Listeners Configuration ---");
-console.log("Default Max:", e.maxListeners); // 10
+// TEST 1: Basic listen
+console.log('TEST 1: Basic listen');
+const test1 = [];
+emitter.listen('msg', (data) => test1.push(data));
+emitter.emit('msg', 'hello');
+console.log(test1); // ['hello']
 
-e.maxListeners = 3;
-console.log("Updated Max:", e.maxListeners); // 3
+// TEST 2: Once fires only once
+console.log('\nTEST 2: Once fires only once');
+const test2 = [];
+emitter.once('single', () => test2.push('fired'));
+emitter.emit('single');
+emitter.emit('single');
+console.log(test2); // ['fired']
 
-console.log("\n--- 2. Testing Listener Limit (console.error expected) ---");
+// TEST 3: Multiple listeners
+console.log('\nTEST 3: Multiple listeners');
+const test3 = [];
+emitter.listen('multi', () => test3.push(1));
+emitter.listen('multi', () => test3.push(2));
+emitter.emit('multi');
+console.log(test3); // [1, 2]
 
-const cb1 = () => console.log("Callback 1");
-const cb2 = () => console.log("Callback 2");
-const cb3 = () => console.log("Callback 3");
-const cb4 = () => console.log("Callback 4");
+// TEST 4: Remove listener
+console.log('\nTEST 4: Remove listener');
+const test4 = [];
+const fn = () => test4.push('removed');
+emitter.listen('remove', fn);
+emitter.listen('remove', () => test4.push('kept'));
+emitter.removeListener('remove', fn);
+emitter.emit('remove');
+console.log(test4); // ['kept']
 
-e.listen("test", cb1);
-e.listen("test", cb2);
-e.listen("test", cb3);
-e.listen("test", cb4); // This should log: "Too many listeners..."
+// TEST 5: Remove all
+console.log('\nTEST 5: Remove all');
+const test5 = [];
+emitter.listen('all', () => test5.push(1));
+emitter.listen('all', () => test5.push(2));
+emitter.removeListener('all');
+emitter.emit('all');
+console.log(test5); // []
 
-console.log("\n--- 3. Testing Emit with Multiple Arguments ---");
+// TEST 6: Multiple args
+console.log('\nTEST 6: Multiple args');
+const test6 = [];
+emitter.listen('args', (a, b, c) => test6.push(a + b + c));
+emitter.emit('args', 1, 2, 3);
+console.log(test6); // [6]
 
-e.listen("data", (user, status, code) => {
-    console.log(`User: ${user} | Status: ${status} | Code: ${code}`);
-});
-e.emit("data", "Admin", "Active", 200);
+// TEST 7: Mixed listen + once
+console.log('\nTEST 7: Mixed listen + once');
+const test7 = [];
+emitter.listen('mix', () => test7.push('persistent'));
+emitter.once('mix', () => test7.push('once'));
+emitter.emit('mix');
+emitter.emit('mix');
+console.log(test7); // ['persistent', 'once', 'persistent']
 
-console.log("\n--- 4. Testing Selective removeListener (Specific Function) ---");
+// TEST 8: Max listeners
+console.log('\nTEST 8: Max listeners');
+const emitter2 = new EventEmitter();
+emitter2.maxListeners = 2;
+emitter2.listen('max', () => { });
+emitter2.listen('max', () => { });
+emitter2.listen('max', () => { }); // Should fail
+console.log('Added 3, should only have 2');
 
-const specificHandler = () => console.log("I should be removed");
-const stayHandler = () => console.log("I should remain");
+// TEST 9: Non-existent event
+console.log('\nTEST 9: Non-existent event');
+try {
+    emitter.emit('doesnotexist');
+    console.log('No crash');
+} catch (e) {
+    console.log('Error:', e.message);
+}
 
-e.listen("multi", specificHandler);
-e.listen("multi", stayHandler);
-
-console.log("Before selective remove:", e.getEventListeners()["multi"].length); // 2
-
-e.removeListener("multi", specificHandler);
-
-console.log("After selective remove:", e.getEventListeners()["multi"].length); // 1
-console.log("Firing 'multi' (only stayHandler should run):");
-
-e.emit("multi");
-
-console.log("\n--- 5. Testing Full removeListener (By Identity) ---");
-
-e.removeListener("test");
-
-console.log("Is 'test' event deleted?", e.getEventListeners()["test"] === undefined); // true
-
-console.log("\n--- 6. Testing Silent Failure for Non-existent Events ---");
-console.log("Emitting 'ghost' event (should be silent):");
-
-e.emit("ghost", "no error here");
-
-console.log("\n--- 7. Testing Parameter Validation ---");
-
-e.listen(null, () => { }); // Should log: "Expected parameters were not passed"
-e.maxListeners = "ten";    // Should log: "Expected number as parameter..."
-
-console.log("\n--- Final Object State ---");
-console.dir(e.getEventListeners());
+// TEST 10: Invalid input
+console.log('\nTEST 10: Invalid input');
+const test10 = [];
+emitter.listen('test10', 'not a function'); // Should error
+emitter.emit('test10');
+console.log(test10); // []
