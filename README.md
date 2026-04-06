@@ -40,4 +40,4 @@ A lightweight, robust implementation of the Observer Pattern for JavaScript. Thi
 import { EventEmitter } from "./main.js";
 
 const emitter = new EventEmitter();
-emitter.maxListeners = 5;
+emitter.maxListeners(5);
